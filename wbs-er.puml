@@ -1,0 +1,111 @@
+@startuml
+
+' 担当者マスター
+entity "staff担当者マスター" {
+    + staff_id [PK]
+    --
+    staff_name
+    email
+    department
+    is_active
+}
+
+' 区分種別マスター
+entity "category_type区分種別マスター" {
+    + category_type_id [PK]
+    --
+    category_type_name
+    description
+    display_order
+    is_active
+}
+
+' 区分マスター
+entity "category区分マスター" {
+    + category_id [PK]
+    --
+    # category_type_id [FK]
+    category_name
+    description
+    display_order
+    is_active
+}
+
+' 機能情報
+entity "function_info機能情報" {
+    + function_id [PK]
+    --
+    # category_id [FK]
+    function_name
+    description
+    display_order
+    is_active
+    created_at
+    updated_at
+}
+
+' プロジェクト
+entity "project案件情報" {
+    + project_id [PK]
+    --
+    project_name
+    description
+    start_date
+    end_date
+    is_active
+}
+
+' プロジェクト区分
+entity "project_category案件区分" {
+    + project_id [PK, FK]
+    + category_id [PK, FK]
+    --
+    created_at
+}
+
+' タスク
+entity "taskタスク情報" {
+    + task_id [PK]
+    --
+    # project_id [FK]
+    # category_id [FK]
+    task_name
+    description
+    plan_hours
+    progress_rate
+    status
+    start_date
+    end_date
+}
+
+' タスク担当者
+entity "task_staffタスク担当者" {
+    + task_id [PK, FK]
+    + staff_id [PK, FK]
+    --
+    assigned_date
+    end_date
+}
+
+' 日別実績工数
+entity "daily_work日別実績工数" {
+    + daily_work_id [PK]
+    --
+    # task_id [FK]
+    # staff_id [FK]
+    work_date
+    actual_hours
+    comment
+}
+
+category_type区分種別マスター ||--o{ category区分マスター
+category区分マスター ||--o{ function_info機能情報
+project案件情報 ||--o{ project_category案件区分
+category区分マスター ||--o{ project_category案件区分
+project案件情報 ||--o{ taskタスク情報
+category区分マスター ||--o{ taskタスク情報
+taskタスク情報 ||--o{ task_staffタスク担当者
+staff担当者マスター ||--o{ task_staffタスク担当者
+task_staffタスク担当者 ||--o{ daily_work日別実績工数
+
+@enduml

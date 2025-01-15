@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>機能マスタ一覧</title>
+    <style>
+        .table-container {
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+        .description-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .description-cell:hover {
+            color: #007bff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>機能マスタ一覧</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#functionModal">
+                                <i class="fas fa-plus"></i> 機能登録
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-container">
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th>サービス</th>
+                                        <th>機能コード</th>
+                                        <th>機能名</th>
+                                        <th>説明</th>
+                                        <th>状態</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="function : ${functions}">
+                                        <td th:text="${function.category?.categoryName}"></td>
+                                        <td th:text="${function.functionCode}"></td>
+                                        <td th:text="${function.functionName}"></td>
+                                        <td class="description-cell" 
+                                            th:text="${function.description}"
+                                            th:data-description="${function.description}"
+                                            onclick="showDescription(this)"></td>
+                                        <td>
+                                            <span th:if="${function.isActive}" class="badge badge-success">有効</span>
+                                            <span th:unless="${function.isActive}" class="badge badge-secondary">無効</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-info btn-sm edit-btn"
+                                                    th:data-function-id="${function.functionCode}">
+                                                <i class="fas fa-edit"></i> 編集
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                                    th:data-function-id="${function.functionCode}">
+                                                <i class="fas fa-trash"></i> 削除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 説明詳細モーダル -->
+        <div class="modal fade" id="descriptionModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">説明詳細</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="fullDescription" style="white-space: pre-wrap;"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 機能登録・編集モーダル -->
+        <div class="modal fade" id="functionModal" tabindex="-1" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="functionForm" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">機能登録</h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="serviceKbnCode">サービス <span class="text-danger">*</span></label>
+                                <select class="form-control" id="serviceKbnCode" name="serviceKbnCode" required>
+                                    <option value="">選択してください</option>
+                                    <th:block th:each="category : ${categories}">
+                                        <option th:value="${category.categoryCode}" 
+                                                th:text="${category.categoryName}"></option>
+                                    </th:block>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="functionCode">機能コード <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="functionCode" name="functionCode" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="functionName">機能名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="functionName" name="functionName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">説明</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="isActive" name="isActive" checked>
+                                    <label class="custom-control-label" for="isActive">有効</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 削除確認モーダル -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">削除確認</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>この機能を削除してよろしいですか？</p>
+                        <p class="text-danger">この操作は取り消せません。</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                            <i class="fas fa-trash"></i> 削除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="script">
+        <script>
+            let deleteTargetId = null;
+
+            function showDescription(element) {
+                const description = element.getAttribute('data-description');
+                document.getElementById('fullDescription').textContent = description || '説明なし';
+                $('#descriptionModal').modal('show');
+            }
+
+            $(document).ready(function() {
+                // 編集ボタンの処理
+                $('.edit-btn').click(function() {
+                    const functionId = $(this).data('function-id');
+                    $.get(`/master/functions/${functionId}`)
+                        .done(function(func) {
+                            $('#functionForm').attr('data-mode', 'edit');
+                            $('#functionForm').attr('data-function-id', functionId);
+                            $('#serviceKbnCode').val(func.serviceKbnCode);
+                            $('#functionCode').val(func.functionCode);
+                            $('#functionCode').prop('readonly', true);
+                            $('#functionName').val(func.functionName);
+                            $('#description').val(func.description);
+                            $('#isActive').prop('checked', func.isActive);
+                            
+                            $('.modal-title').text('機能編集');
+                            $('#functionModal').modal('show');
+                        })
+                        .fail(function(xhr) {
+                            toastr.error('機能情報の取得に失敗しました: ' + xhr.responseText);
+                        });
+                });
+
+                // フォーム送信処理
+                $('#functionForm').submit(function(e) {
+                    e.preventDefault();
+                    const mode = $(this).attr('data-mode');
+                    const functionId = $(this).attr('data-function-id');
+                    
+                    const url = mode === 'edit' 
+                        ? `/master/functions/${functionId}`
+                        : '/master/functions';
+                    
+                    $.post(url, $(this).serialize())
+                        .done(function() {
+                            $('#functionModal').modal('hide');
+                            toastr.success('保存しました');
+                            location.reload();
+                        })
+                        .fail(function(xhr) {
+                            toastr.error('保存に失敗しました：' + xhr.responseText);
+                        });
+                });
+
+                // 削除ボタンの処理
+                $('.delete-btn').click(function() {
+                    deleteTargetId = $(this).data('function-id');
+                    $('#deleteConfirmModal').modal('show');
+                });
+
+                // 削除確認ボタンの処理
+                $('#confirmDeleteBtn').click(function() {
+                    if (deleteTargetId) {
+                        $.post(`/master/functions/${deleteTargetId}/delete`)
+                            .done(function() {
+                                $('#deleteConfirmModal').modal('hide');
+                                toastr.success('機能を削除しました');
+                                location.reload();
+                            })
+                            .fail(function(xhr) {
+                                $('#deleteConfirmModal').modal('hide');
+                                toastr.error('削除に失敗しました：' + xhr.responseText);
+                            });
+                    }
+                });
+
+                // モーダルが閉じられたときの処理
+                $('#functionModal').on('hidden.bs.modal', function() {
+                    $('#functionForm').trigger('reset');
+                    $('#functionForm').removeAttr('data-mode');
+                    $('#functionForm').removeAttr('data-function-id');
+                    $('#functionCode').prop('readonly', false);
+                    $('.modal-title').text('機能登録');
+                });
+
+                // 削除モーダルが閉じられたときの処理
+                $('#deleteConfirmModal').on('hidden.bs.modal', function() {
+                    deleteTargetId = null;
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

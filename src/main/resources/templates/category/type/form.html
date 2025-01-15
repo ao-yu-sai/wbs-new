@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>区分種別マスター 登録・編集</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>区分種別マスター 登録・編集</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="card">
+                    <form th:action="${categoryType.categoryTypeId == null} ? @{/category-types} : @{/category-types/{id}(id=${categoryType.categoryTypeId})}"
+                          th:object="${categoryType}" method="post">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="categoryTypeName">区分種別名</label>
+                                <input type="text" class="form-control" id="categoryTypeName" 
+                                       th:field="*{categoryTypeName}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">説明</label>
+                                <textarea class="form-control" id="description" 
+                                         th:field="*{description}" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="displayOrder">表示順</label>
+                                <input type="number" class="form-control" id="displayOrder" 
+                                       th:field="*{displayOrder}">
+                            </div>
+                            <div class="form-group" th:if="${categoryType.categoryTypeId != null}">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="isActive" 
+                                           th:field="*{isActive}">
+                                    <label class="custom-control-label" for="isActive">有効</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a href="/category-types" class="btn btn-default">キャンセル</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html> 
