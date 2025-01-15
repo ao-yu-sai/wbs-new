@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/wbs_db?currentSchema=public
+    url: jdbc:postgresql://localhost:5432/wbs_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -13,6 +13,8 @@ spring:
     schemas: public
     repair-on-migrate: true
     validate-on-migrate: false
+    clean-on-validation-error: true
+    clean-disabled: false
 
   devtools:
     restart:
@@ -28,9 +30,16 @@ spring:
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
-  # mapper-locations: classpath:mybatis/mapper/*.xml
   type-aliases-package: com.ai_offshore.tools.wbs.web.model
 
+# PageHelper設定
+pagehelper:
+  helper-dialect: postgresql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+# Redmine設定
 redmine:
   url: https://benefit-one.net/extrdmn
   api-key: e1b2766512ba4f2b8098df6ecd3bb60e6b0c32c9 

@@ -6,8 +6,11 @@
     <title>区分種別マスター</title>
     <style>
         .table-container {
-            max-height: calc(100vh - 300px);
+            max-height: calc(100vh - 200px);
             overflow-y: auto;
+        }
+        .table{
+            margin-bottom: 0px;
         }
         tr.selected {
             background-color: rgba(0, 123, 255, 0.1) !important;
@@ -49,38 +52,42 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="card-body p-0">
+                            <div class="card-body p-0 pb-0">
                                 <div class="table-container">
-                                    <table class="table table-hover text-nowrap">
-                                        <thead>
-                                            <tr>
-                                                <th>区分種別コード</th>
-                                                <th>区分種別名</th>
-                                                <th>状態</th>
-                                                <th>操作</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="type : ${categoryTypes}" class="clickable-row" th:data-type-code="${type.categoryTypeCode}">
-                                                <td th:text="${type.categoryTypeCode}"></td>
-                                                <td th:text="${type.categoryTypeName}"></td>
-                                                <td>
-                                                    <span th:if="${type.isActive}" class="badge badge-success">有効</span>
-                                                    <span th:unless="${type.isActive}" class="badge badge-secondary">無効</span>
-                                                </td>
-                                                <td>
-                                                    <button type="button" class="btn btn-info btn-sm edit-btn"
-                                                            th:data-category-type-code="${type.categoryTypeCode}">
-                                                        <i class="fas fa-edit"></i> 編集
-                                                    </button>
-                                                    <button type="button" class="btn btn-danger btn-sm delete-btn"
-                                                            th:data-category-type-code="${type.categoryTypeCode}">
-                                                        <i class="fas fa-trash"></i> 削除
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover text-nowrap table-compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>区分種別コード</th>
+                                                    <th>区分種別名</th>
+                                                    <th>説明</th>
+                                                    <th>状態</th>
+                                                    <th>操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="type : ${categoryTypes}" class="clickable-row" th:data-type-code="${type.categoryTypeCode}">
+                                                    <td th:text="${type.categoryTypeCode}"></td>
+                                                    <td th:text="${type.categoryTypeName}"></td>
+                                                    <td th:text="${type.description}"></td>
+                                                    <td>
+                                                        <span th:if="${type.isActive}" class="badge badge-success">有効</span>
+                                                        <span th:unless="${type.isActive}" class="badge badge-secondary">無効</span>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-info btn-sm edit-btn"
+                                                                th:data-category-type-code="${type.categoryTypeCode}">
+                                                            <i class="fas fa-edit"></i> 編集
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                                                th:data-category-type-code="${type.categoryTypeCode}">
+                                                            <i class="fas fa-trash"></i> 削除
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -97,9 +104,9 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="card-body p-0">
+                            <div class="card-body p-0 pb-0">
                                 <div class="table-container">
-                                    <div id="categoryList" class="p-3">
+                                    <div id="categoryList">
                                         <p class="text-muted text-center">区分種別を選択してください</p>
                                     </div>
                                 </div>

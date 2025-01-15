@@ -1,6 +1,7 @@
 package com.ai_offshore.tools.wbs.web.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -9,13 +10,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.ai_offshore.tools.wbs.web.mapper.FunctionMapper;
 import com.ai_offshore.tools.wbs.web.model.Function;
 import com.ai_offshore.tools.wbs.web.service.CategoryService;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 
 @Controller
 @RequestMapping("/master/functions")
@@ -30,10 +33,34 @@ public class FunctionMasterController {
     }
     
     @GetMapping
-    public String list(Model model) {
+    public String list(@RequestParam(defaultValue = "1") int page,
+                       @RequestParam(defaultValue = "10") int size,
+                       @RequestParam(required = false) String keyword,
+                       Model model) {
+        PageHelper.startPage(page, size);
         List<Function> functions = functionMapper.findAll();
-        model.addAttribute("functions", functions);
+        
+        if (keyword != null && !keyword.isEmpty()) {
+            functions = functions.stream()
+                .filter(f -> 
+                    (f.getFunctionCode() != null && f.getFunctionCode().contains(keyword)) ||
+                    (f.getFunctionName() != null && f.getFunctionName().contains(keyword)) ||
+                    (f.getDescription() != null && f.getDescription().contains(keyword)) ||
+                    (f.getCategory() != null && f.getCategory().getCategoryName() != null && 
+                     f.getCategory().getCategoryName().contains(keyword))
+                )
+                .collect(Collectors.toList());
+        }
+        
+        PageInfo<Function> pageInfo = new PageInfo<>(functions);
+        
+        model.addAttribute("functions", pageInfo.getList());
         model.addAttribute("categories", categoryService.findByCategoryTypeCode("SERVICE_KBN"));
+        model.addAttribute("currentPage", pageInfo.getPageNum());
+        model.addAttribute("totalPages", pageInfo.getPages());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("total", pageInfo.getTotal());
+        model.addAttribute("keyword", keyword);
         return "master/function/list";
     }
     
