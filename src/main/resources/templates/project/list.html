@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/layout}">
 <head>
-    <title>案件一覧</title>
+    <title>案件登録</title>
     <style>
         .project-row {
             cursor: pointer;
@@ -74,7 +74,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1>案件一覧</h1>
+                        <h1>案件登録</h1>
                     </div>
                 </div>
             </div>
@@ -720,7 +720,7 @@
                     if ($(e.target).closest('.btn').length > 0) {
                         return;
                     }
-
+                    
                     // 選択状態の更新（背景色の変更）
                     $('#functionTableBody tr').removeClass('selected');
                     $(this).addClass('selected');
@@ -1032,4 +1032,4 @@
         </script>
     </th:block>
 </body>
-</html>
+</html> 

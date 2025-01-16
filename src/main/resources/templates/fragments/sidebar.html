@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Sidebar Fragment</title>
+</head>
+<body>
+    <aside th:fragment="sidebar" class="main-sidebar sidebar-dark-primary elevation-4">
+        <!-- Brand Logo -->
+        <a href="/" class="brand-link">
+            <span class="brand-text font-weight-light">WBS管理システム</span>
+        </a>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Sidebar Menu -->
+            <nav class="mt-2">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                    <!-- ダッシュボード -->
+                    <li class="nav-item">
+                        <a th:href="@{/}" class="nav-link" th:classappend="${currentPage == 'dashboard'} ? 'active'">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p>ダッシュボード</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/projects}" class="nav-link">
+                            <i class="nav-icon fas fa-project-diagram"></i>
+                            <p>案件一覧</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-cogs"></i>
+                            <p>
+                                マスタ管理
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a th:href="@{/category-types}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>区分種別マスタ</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/staff}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>担当者マスタ</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/master/functions}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>機能マスタ</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+</body>
+</html> 

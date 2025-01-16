@@ -106,6 +106,28 @@
         </section>
     </div>
 
+    <!-- 削除確認モーダル -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">担当者削除確認</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>この担当者を削除してよろしいですか？</p>
+                    <p class="text-danger">この操作は取り消せません。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">削除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <th:block layout:fragment="script">
         <script>
             $(document).ready(function() {
@@ -118,7 +140,7 @@
                     selectedStaffId = $(this).find('td:first').text();
                     
                     // 担当者情報を取得
-                    $.get(`/staff/${selectedStaffId}`, function(staff) {
+                    $.get(`/api/staff/${selectedStaffId}`, function(staff) {
                         $('#staffId').val(staff.staffId);
                         $('#staffName').val(staff.staffName);
                         $('#email').val(staff.email);
@@ -138,22 +160,52 @@
                 // フォーム送信の処理
                 $('#staffForm').submit(function(e) {
                     e.preventDefault();
-                    var url = selectedStaffId ? `/staff/${selectedStaffId}` : '/staff';
+                    var url = selectedStaffId ? `/api/staff/${selectedStaffId}` : '/api/staff';
                     
-                    $.post(url, $(this).serialize())
-                        .done(function() {
+                    // フォームデータを作成
+                    var formData = {
+                        staffName: $('#staffName').val(),
+                        email: $('#email').val(),
+                        department: $('#department').val(),
+                        isActive: $('#isActive').prop('checked')
+                    };
+                    
+                    if (selectedStaffId) {
+                        formData.staffId = selectedStaffId;
+                    }
+                    
+                    $.ajax({
+                        url: url,
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(formData),
+                        success: function() {
                             location.reload();
-                        });
+                        },
+                        error: function() {
+                            toastr.error('保存に失敗しました。');
+                        }
+                    });
                 });
 
                 // 削除ボタンの処理
                 $('#deleteBtn').click(function() {
-                    if (selectedStaffId && confirm('この担当者を削除してよろしいですか？')) {
-                        $.post(`/staff/${selectedStaffId}/delete`)
-                            .done(function() {
-                                location.reload();
-                            });
+                    if (selectedStaffId) {
+                        $('#deleteConfirmModal').modal('show');
                     }
+                });
+
+                // 削除確認ボタンの処理
+                $('#confirmDeleteBtn').click(function() {
+                    $.post(`/api/staff/${selectedStaffId}/delete`)
+                        .done(function() {
+                            $('#deleteConfirmModal').modal('hide');
+                            location.reload();
+                        })
+                        .fail(function() {
+                            $('#deleteConfirmModal').modal('hide');
+                            toastr.error('削除に失敗しました。');
+                        });
                 });
             });
         </script>

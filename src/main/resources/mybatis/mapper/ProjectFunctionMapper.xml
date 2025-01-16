@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ai_offshore.tools.wbs.web.mapper.ProjectFunctionMapper">
+
+    <select id="findByTicketNumberAndServiceKbnCode" resultType="com.ai_offshore.tools.wbs.web.model.ProjectFunction">
+        SELECT 
+            pf.ticket_number,
+            pf.service_kbn_code,
+            pf.function_code,
+            f.function_name as "function.functionName",
+            f.description as "function.description"
+        FROM 
+            project_function_info pf
+            LEFT JOIN function_info f ON pf.service_kbn_code = f.service_kbn_code 
+                AND pf.function_code = f.function_code
+        WHERE 
+            pf.ticket_number = #{ticketNumber}
+            AND pf.service_kbn_code = #{serviceKbnCode}
+        ORDER BY 
+            pf.function_code
+    </select>
+
+    <delete id="deleteByTicketNumberAndServiceKbnCode">
+        DELETE FROM project_function_info
+        WHERE ticket_number = #{ticketNumber}
+        AND service_kbn_code = #{serviceKbnCode}
+    </delete>
+
+    <insert id="insert">
+        INSERT INTO project_function_info (
+            ticket_number,
+            service_kbn_code,
+            function_code
+        ) VALUES (
+            #{ticketNumber},
+            #{serviceKbnCode},
+            #{functionCode}
+        )
+    </insert>
+
+    <insert id="insertTask">
+        INSERT INTO project_function_task_info (
+            ticket_number,
+            service_kbn_code,
+            function_code,
+            task_kbn_code,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{ticketNumber},
+            #{serviceKbnCode},
+            #{functionCode},
+            #{taskKbnCode},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <select id="findTasksByFunction" resultType="com.ai_offshore.tools.wbs.web.model.ProjectFunctionTask">
+        SELECT 
+            t.ticket_number,
+            t.service_kbn_code,
+            t.function_code,
+            t.task_kbn_code,
+            c.category_name as taskName,
+            t.person_in_charge,
+            t.planned_start_date,
+            t.planned_end_date,
+            t.planned_man_hours,
+            t.actual_start_date,
+            t.actual_end_date,
+            t.actual_man_hours,
+            t.progress_rate,
+            t.created_at,
+            t.updated_at
+        FROM 
+            project_function_task_info t
+            LEFT JOIN category c ON c.category_type_code = 'TASK_KBN' 
+                AND t.task_kbn_code = c.category_code
+        WHERE 
+            t.ticket_number = #{ticketNumber}
+            AND t.function_code = #{functionCode}
+            AND t.service_kbn_code = #{serviceKbnCode}
+        ORDER BY 
+            t.task_kbn_code
+    </select>
+
+    <update id="updateTask">
+        UPDATE project_function_task_info
+        SET
+            person_in_charge = #{personInCharge},
+            planned_start_date = #{plannedStartDate},
+            planned_end_date = #{plannedEndDate},
+            planned_man_hours = #{plannedManHours},
+            actual_start_date = #{actualStartDate},
+            actual_end_date = #{actualEndDate},
+            actual_man_hours = #{actualManHours},
+            progress_rate = #{progressRate},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE
+            ticket_number = #{ticketNumber}
+            AND service_kbn_code = #{serviceKbnCode}
+            AND function_code = #{functionCode}
+            AND task_kbn_code = #{taskKbnCode}
+    </update>
+
+</mapper> 
