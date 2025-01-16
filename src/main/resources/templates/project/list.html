@@ -62,6 +62,10 @@
         #taskTableBody tr.selected {
             background-color: #e3f2fd !important;
         }
+        /* 変更された行のスタイル */
+        .modified-row {
+            background-color: #ffebee !important;  /* 薄いピンク */
+        }
     </style>
 </head>
 <body>
@@ -183,13 +187,13 @@
                                     <table class="table table-hover text-nowrap table-compact" id="taskTable">
                                         <thead>
                                             <tr>
-                                                <th>タスク区分</th>
-                                                <th>担当者</th>
-                                                <th>開始予定日</th>
-                                                <th>終了予定日</th>
+                                                <th>タスク</th>
+                                                <th style="width: 300px;">担当者</th>
+                                                <th style="width: 100px;">開始予定日</th>
+                                                <th style="width: 100px;">終了予定日</th>
                                                 <th>予定工数</th>
-                                                <th>実績開始日</th>
-                                                <th>実績終了日</th>
+                                                <th style="width: 100px;">実績開始日</th>
+                                                <th style="width: 100px;">実績終了日</th>
                                                 <th>実績工数</th>
                                                 <th>進捗率</th>
                                             </tr>
@@ -380,81 +384,41 @@
                             </button>
                         </div>
                         <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="taskKbnCode">タスク区分 <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="taskKbnCode" name="taskKbnCode" required>
-                                            <option value="">選択してください</option>
-                                            <th:block th:each="category : ${taskCategories}">
-                                                <option th:value="${category.categoryCode}" 
-                                                        th:text="|${category.categoryCode} - ${category.categoryName}|"></option>
-                                            </th:block>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="personInCharge">担当者</label>
-                                        <input type="text" class="form-control" id="personInCharge" name="personInCharge">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="progressRate">進捗率</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="progressRate" name="progressRate" min="0" max="100">
-                                            <div class="input-group-append">
-                                                <span class="input-group-text">%</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="plannedStartDate">開始予定日</label>
-                                        <input type="date" class="form-control" id="plannedStartDate" name="plannedStartDate">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="plannedEndDate">終了予定日</label>
-                                        <input type="date" class="form-control" id="plannedEndDate" name="plannedEndDate">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="plannedManHours">予定工数</label>
-                                        <input type="number" class="form-control" id="plannedManHours" name="plannedManHours" step="0.5">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="actualStartDate">実績開始日</label>
-                                        <input type="date" class="form-control" id="actualStartDate" name="actualStartDate">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="actualEndDate">実績終了日</label>
-                                        <input type="date" class="form-control" id="actualEndDate" name="actualEndDate">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="actualManHours">実績工数</label>
-                                        <input type="number" class="form-control" id="actualManHours" name="actualManHours" step="0.5">
-                                    </div>
-                                </div>
+                            <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                                <table class="table table-hover text-nowrap table-compact">
+                                    <thead style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                                        <tr>
+                                            <th style="width: 40px;">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input" id="selectAllTasks">
+                                                    <label class="custom-control-label" for="selectAllTasks"></label>
+                                                </div>
+                                            </th>
+                                            <th>区分コード</th>
+                                            <th>区分名</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="taskCategoryTableBody">
+                                        <tr th:each="category : ${taskCategories}">
+                                            <td>
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input task-checkbox"
+                                                           th:id="'task_' + ${category.categoryCode}"
+                                                           th:value="${category.categoryCode}">
+                                                    <label class="custom-control-label" 
+                                                           th:for="'task_' + ${category.categoryCode}"></label>
+                                                </div>
+                                            </td>
+                                            <td th:text="${category.categoryCode}"></td>
+                                            <td th:text="${category.categoryName}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
-                            <button type="submit" class="btn btn-primary">保存</button>
+                            <button type="submit" class="btn btn-primary">追加</button>
                         </div>
                     </form>
                 </div>
@@ -513,6 +477,12 @@
                         loadProjectFunctions(serviceKbnCode,projectId);
                         // 機能追加ボタンを有効化
                         $('#addFunctionBtn').prop('disabled', false);
+
+                        // タスク一覧をクリアして非表示にする
+                        $('#taskTableBody').empty();
+                        $('#taskList').hide();
+                        $('#noFunctionSelected').show();
+                        $('#addTaskBtn').prop('disabled', true);
                     }
                 });
 
@@ -791,21 +761,158 @@
                         }
 
                         tasks.forEach(function(task) {
-                            const row = $('<tr>');
-                            row.append($('<td>').text(task.taskKbnCode));
-                            row.append($('<td>').text(task.personInCharge || ''));
-                            row.append($('<td>').text(task.plannedStartDate || ''));
-                            row.append($('<td>').text(task.plannedEndDate || ''));
-                            row.append($('<td>').text(task.plannedManHours || ''));
-                            row.append($('<td>').text(task.actualStartDate || ''));
-                            row.append($('<td>').text(task.actualEndDate || ''));
-                            row.append($('<td>').text(task.actualManHours || ''));
-                            row.append($('<td>').text(task.progressRate ? task.progressRate + '%' : ''));
-                            tbody.append(row);
+                            appendTaskToTable(task);
                         });
                     })
                     .fail(function(xhr) {
                         toastr.error('タスク一覧の取得に失敗しました：' + xhr.responseText);
+                    });
+                }
+
+                function appendTaskToTable(task) {
+                    const row = $('<tr>');
+                    row.append($('<td>').text(task.taskName));
+                    
+                    // 担当者（コンボボックスで選択）
+                    const personInChargeSelect = $('<select style="width:100px;">')
+                        .addClass('form-control form-control-sm')
+                        .on('change', function() {
+                            updateTask(task, { personInCharge: $(this).val() });
+                        });
+                    
+                    // 担当者一覧を取得してコンボボックスに追加
+                    $.get('/api/staff/list')
+                        .done(function(staffList) {
+                            // 空の選択肢を追加
+                            personInChargeSelect.append($('<option>').val('').text(''));
+                            
+                            // 担当者一覧を追加
+                            staffList.forEach(function(staff) {
+                                const option = $('<option>')
+                                    .val(staff.email)
+                                    .text(staff.staffName)
+                                    .prop('selected', staff.email === task.personInCharge);
+                                personInChargeSelect.append(option);
+                            });
+                        })
+                        .fail(function() {
+                            toastr.error('担当者一覧の取得に失敗しました。');
+                        });
+                    
+                    row.append($('<td>').append(personInChargeSelect));
+
+                    // 予定開始日（入力可能）
+                    const plannedStartDateInput = $('<input>')
+                        .attr('type', 'date')
+                        .addClass('form-control form-control-sm')
+                        .val(formatDateForInput(task.plannedStartDate))
+                        .on('change', function() {
+                            updateTask(task, { plannedStartDate: $(this).val() });
+                        });
+                    row.append($('<td>').append(plannedStartDateInput));
+
+                    // 予定終了日（入力可能）
+                    const plannedEndDateInput = $('<input>')
+                        .attr('type', 'date')
+                        .addClass('form-control form-control-sm')
+                        .val(formatDateForInput(task.plannedEndDate))
+                        .on('change', function() {
+                            updateTask(task, { plannedEndDate: $(this).val() });
+                        });
+                    row.append($('<td>').append(plannedEndDateInput));
+
+                    // 予定工数（入力可能）
+                    const plannedManHoursInput = $('<input>')
+                        .attr('type', 'number')
+                        .attr('step', '0.5')
+                        .addClass('form-control form-control-sm')
+                        .val(task.plannedManHours || '')
+                        .on('change', function() {
+                            updateTask(task, { plannedManHours: $(this).val() });
+                        });
+                    row.append($('<td>').append(plannedManHoursInput));
+
+                    // 実績開始日（入力可能）
+                    const actualStartDateInput = $('<input>')
+                        .attr('type', 'date')
+                        .addClass('form-control form-control-sm')
+                        .val(formatDateForInput(task.actualStartDate))
+                        .on('change', function() {
+                            updateTask(task, { actualStartDate: $(this).val() });
+                        });
+                    row.append($('<td>').append(actualStartDateInput));
+
+                    // 実績終了日（入力可能）
+                    const actualEndDateInput = $('<input>')
+                        .attr('type', 'date')
+                        .addClass('form-control form-control-sm')
+                        .val(formatDateForInput(task.actualEndDate))
+                        .on('change', function() {
+                            updateTask(task, { actualEndDate: $(this).val() });
+                        });
+                    row.append($('<td>').append(actualEndDateInput));
+
+                    // 実績工数（入力可能）
+                    const actualManHoursInput = $('<input>')
+                        .attr('type', 'number')
+                        .attr('step', '0.5')
+                        .addClass('form-control form-control-sm')
+                        .val(task.actualManHours || '')
+                        .on('change', function() {
+                            updateTask(task, { actualManHours: $(this).val() });
+                        });
+                    row.append($('<td>').append(actualManHoursInput));
+
+                    // 進捗率（入力可能）
+                    const progressRateInput = $('<input>')
+                        .attr('type', 'number')
+                        .attr('min', '0')
+                        .attr('max', '100')
+                        .addClass('form-control form-control-sm')
+                        .val(task.progressRate || '')
+                        .on('change', function() {
+                            updateTask(task, { progressRate: $(this).val() });
+                        });
+                    row.append($('<td>').append(progressRateInput));
+
+                    $('#taskTableBody').append(row);
+                }
+
+                function updateTask(task, updates) {
+                    // 現在の入力値を全て取得
+                    const row = $(event.target).closest('tr');
+                    const currentValues = {
+                        ticketNumber: task.ticketNumber,
+                        serviceKbnCode: task.serviceKbnCode,
+                        functionCode: task.functionCode,
+                        taskKbnCode: task.taskKbnCode,
+                        taskName: task.taskName,
+                        personInCharge: row.find('select').val(),
+                        plannedStartDate: row.find('input[type="date"]').eq(0).val(),
+                        plannedEndDate: row.find('input[type="date"]').eq(1).val(),
+                        plannedManHours: row.find('input[type="number"]').eq(0).val(),
+                        actualStartDate: row.find('input[type="date"]').eq(2).val(),
+                        actualEndDate: row.find('input[type="date"]').eq(3).val(),
+                        actualManHours: row.find('input[type="number"]').eq(1).val(),
+                        progressRate: row.find('input[type="number"]').eq(2).val()
+                    };
+
+                    // 更新内容をマージ
+                    const updatedTask = { ...currentValues, ...updates };
+
+                    $.ajax({
+                        url: '/projects/tasks/update',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(updatedTask),
+                        success: function() {
+                            toastr.success('タスク情報を更新しました。');
+                            // 変更された行の背景色を変更
+                            row.addClass('modified-row');
+                        },
+                        error: function() {
+                            toastr.error('タスク情報の更新に失敗しました。');
+                        }
                     });
                 }
 
@@ -842,45 +949,85 @@
                     const selectedRow = $(`tr[data-project-id="${selectedProjectId}"]`);
                     const serviceKbnCode = selectedRow.data('service-kbn-code');
 
-                    // フォームデータを取得
-                    const formData = {
-                        taskKbnCode: $('#taskKbnCode').val(),
-                        personInCharge: $('#personInCharge').val(),
-                        plannedStartDate: $('#plannedStartDate').val(),
-                        plannedEndDate: $('#plannedEndDate').val(),
-                        plannedManHours: $('#plannedManHours').val(),
-                        actualStartDate: $('#actualStartDate').val(),
-                        actualEndDate: $('#actualEndDate').val(),
-                        actualManHours: $('#actualManHours').val(),
-                        progressRate: $('#progressRate').val(),
-                        serviceKbnCode: serviceKbnCode,
-                        functionCode: functionCode
-                    };
+                    // 選択されたタスク区分を取得
+                    const selectedTaskCodes = [];
+                    $('.task-checkbox:checked').each(function() {
+                        selectedTaskCodes.push($(this).val());
+                    });
 
-                    // タスクを登録
-                    $.ajax({
-                        url: `/projects/${selectedProjectId}/functions/${functionCode}/tasks`,
-                        method: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify(formData),
-                        success: function() {
+                    if (selectedTaskCodes.length === 0) {
+                        toastr.warning('タスク区分を選択してください');
+                        return;
+                    }
+
+                    // タスクを登録（1タスク1レコード）
+                    const promises = selectedTaskCodes.map(taskKbnCode => {
+                        return $.ajax({
+                            url: `/projects/project-function-tasks`,
+                            method: 'POST',
+                            traditional: true,
+                            data: {
+                                ticketNumber: selectedProjectId,
+                                serviceKbnCode: serviceKbnCode,
+                                functionCode: functionCode,
+                                taskKbnCode: taskKbnCode
+                            }
+                        });
+                    });
+
+                    // すべてのタスク登録が完了したら
+                    Promise.all(promises)
+                        .then(() => {
                             $('#taskModal').modal('hide');
                             toastr.success('タスクを登録しました');
                             // タスク一覧を再読み込み
                             loadTaskList(selectedProjectId, functionCode);
                             // フォームをリセット
                             $('#taskForm').trigger('reset');
-                        },
-                        error: function(xhr) {
-                            toastr.error('タスクの登録に失敗しました：' + xhr.responseText);
-                        }
+                        })
+                        .catch(error => {
+                            toastr.error('タスクの登録に失敗しました：' + error.responseText);
+                        });
+                });
+
+                // 全選択チェックボックスの処理
+                $('#selectAllTasks').change(function() {
+                    const isChecked = $(this).prop('checked');
+                    $('.task-checkbox').prop('checked', isChecked);
+                });
+
+                // 個別のチェックボックス変更時の処理
+                $(document).on('change', '.task-checkbox', function() {
+                    const totalCheckboxes = $('.task-checkbox').length;
+                    const checkedCheckboxes = $('.task-checkbox:checked').length;
+                    
+                    $('#selectAllTasks').prop({
+                        checked: totalCheckboxes === checkedCheckboxes,
+                        indeterminate: checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes
                     });
                 });
 
                 // タスクモーダルが閉じられたときの処理
                 $('#taskModal').on('hidden.bs.modal', function() {
                     $('#taskForm').trigger('reset');
+                    $('#selectAllTasks').prop('checked', false);
                 });
+
+                // 日付入力のフォーマットを設定
+                $(document).on('focus', 'input[type="date"]', function() {
+                    // カレンダーを表示させるため、typeの変更は行わない
+                    $(this).attr('placeholder', 'YYYY/MM/DD');
+                });
+
+                // 日付フォーマット用の関数
+                function formatDateForInput(dateStr) {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`; // カレンダー用にハイフン区切りに変更
+                }
             });
         </script>
     </th:block>

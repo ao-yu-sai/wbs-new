@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 
 import com.ai_offshore.tools.wbs.web.model.ProjectFunction;
 import com.ai_offshore.tools.wbs.web.model.ProjectFunctionTask;
@@ -42,12 +41,19 @@ public interface ProjectFunctionMapper {
     /**
      * 機能に紐づくタスク一覧を取得
      */
-    @Select("SELECT * FROM project_function_task_info " +
-            "WHERE ticket_number = #{ticketNumber} " +
-            "AND function_code = #{functionCode} " +
-            "AND service_kbn_code = #{serviceKbnCode}")
     List<ProjectFunctionTask> findTasksByFunction(
             @Param("ticketNumber") String ticketNumber,
             @Param("functionCode") String functionCode,
             @Param("serviceKbnCode") String serviceKbnCode);
+
+    /**
+     * タスクを登録
+     */
+    void insertTask(
+        @Param("ticketNumber") String ticketNumber,
+        @Param("serviceKbnCode") String serviceKbnCode,
+        @Param("functionCode") String functionCode,
+        @Param("taskKbnCode") String taskKbnCode);
+
+    void updateTask(ProjectFunctionTask task);
 } 
