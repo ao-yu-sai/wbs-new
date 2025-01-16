@@ -21,8 +21,8 @@ public class ProjectService {
         return projectMapper.findAll();
     }
     
-    public Project findById(String id) {
-        return projectMapper.findById(id);
+    public Project findById(String id,String serviceKbnCode) {
+        return projectMapper.findById(id,serviceKbnCode);
     }
     
     @Transactional

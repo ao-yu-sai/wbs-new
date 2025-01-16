@@ -167,7 +167,7 @@
         <div class="modal fade" id="categoryModal" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                    <form id="categoryForm" method="post">
+                    <form id="categoryForm" method="post" action="/category-types/{code}">
                         <input type="hidden" id="categoryId" name="categoryId">
                         <div class="modal-header">
                             <h5 class="modal-title">区分登録・編集</h5>
@@ -388,6 +388,7 @@
                         .done(function(categoryType) {
                             $('#categoryTypeForm').attr('data-mode', 'edit');
                             $('#categoryTypeForm').attr('data-category-type-code', categoryTypeCode);
+                            $('#categoryTypeForm').attr('action', `/category-types/${categoryTypeCode}`);
                             $('#categoryTypeCode').val(categoryType.categoryTypeCode);
                             $('#categoryTypeName').val(categoryType.categoryTypeName);
                             $('#description').val(categoryType.description);
@@ -411,6 +412,7 @@
                     $('#categoryTypeForm').trigger('reset');
                     $('#categoryTypeForm').removeAttr('data-mode');
                     $('#categoryTypeForm').removeAttr('data-category-type-code');
+                    $('#categoryTypeForm').attr('action', '/category-types');
                     $('.modal-title').text('区分種別登録');
                     $('#categoryTypeCode').prop('readonly', false);
                 });

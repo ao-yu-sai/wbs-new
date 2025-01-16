@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.ai_offshore.tools.wbs.web.mapper.FunctionMapper;
@@ -40,7 +41,9 @@ public class ProjectController {
     @GetMapping
     public String list(Model model) {
         List<Category> categories = categoryService.findByCategoryTypeCode("SERVICE_KBN");
+        List<Category> taskCategories = categoryService.findByCategoryTypeCode("TASK_KBN");
         model.addAttribute("categories", categories);
+        model.addAttribute("taskCategories", taskCategories);
         model.addAttribute("projects", projectService.findAll());
         return "project/list";
     }
@@ -58,9 +61,11 @@ public class ProjectController {
     
     @GetMapping("/{id}/edit")
     @ResponseBody
-    public ResponseEntity<Project> getProjectForEdit(@PathVariable String id) {
+    public ResponseEntity<Project> getProjectForEdit(
+            @PathVariable String id,
+            @RequestParam String serviceKbnCode) {
         try {
-            Project project = projectService.findById(id);
+            Project project = projectService.findById(id, serviceKbnCode);
             if (project != null) {
                 return ResponseEntity.ok(project);
             } else {
@@ -88,7 +93,7 @@ public class ProjectController {
     @ResponseBody
     public ResponseEntity<Project> getProject(@PathVariable String id) {
         try {
-            Project project = projectService.findById(id);
+            Project project = projectService.findById(id, null);
             if (project != null) {
                 return ResponseEntity.ok(project);
             } else {
@@ -103,9 +108,9 @@ public class ProjectController {
     @ResponseBody
     public ResponseEntity<List<ProjectFunction>> getFunctions(@PathVariable String id) {
         try {
-            Project project = projectService.findById(id);
+            Project project = projectService.findById(id, null);
             if (project != null && project.getServiceKbnCode() != null) {
-                List<ProjectFunction> functions = projectFunctionMapper.findByTicketNumber(id);
+                List<ProjectFunction> functions = projectFunctionMapper.findByTicketNumberAndServiceKbnCode(id, project.getServiceKbnCode());
                 return ResponseEntity.ok(functions);
             }
             return ResponseEntity.notFound().build();
@@ -114,30 +119,12 @@ public class ProjectController {
         }
     }
     
-    @GetMapping("/{id}/service-kbn")
+    @GetMapping("/{serviceKbnCode}/available-functions")
     @ResponseBody
-    public ResponseEntity<String> getServiceKbnCode(@PathVariable String id) {
+    public ResponseEntity<List<Function>> getAvailableFunctions(@PathVariable String serviceKbnCode) {
         try {
-            Project project = projectService.findById(id);
-            if (project != null && project.getServiceKbnCode() != null) {
-                return ResponseEntity.ok(project.getServiceKbnCode());
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-    
-    @GetMapping("/{id}/available-functions")
-    @ResponseBody
-    public ResponseEntity<List<Function>> getAvailableFunctions(@PathVariable String id) {
-        try {
-            Project project = projectService.findById(id);
-            if (project != null && project.getServiceKbnCode() != null) {
-                List<Function> functions = functionMapper.findByServiceKbnCode(project.getServiceKbnCode());
-                return ResponseEntity.ok(functions);
-            }
-            return ResponseEntity.notFound().build();
+            List<Function> functions = functionMapper.findByServiceKbnCode(serviceKbnCode);
+            return ResponseEntity.ok(functions);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

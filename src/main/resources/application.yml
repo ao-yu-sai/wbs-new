@@ -4,7 +4,13 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-  
+    sql:
+      init:
+        encoding: UTF-8
+
+  messages:
+    encoding: UTF-8
+
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -26,8 +32,10 @@ spring:
   thymeleaf:
     cache: false
     prefix: file:src/main/resources/templates/
+    encoding: UTF-8
 
 mybatis:
+  mapper-locations: classpath:mybatis/mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
   type-aliases-package: com.ai_offshore.tools.wbs.web.model
@@ -43,3 +51,17 @@ pagehelper:
 redmine:
   url: https://benefit-one.net/extrdmn
   api-key: e1b2766512ba4f2b8098df6ecd3bb60e6b0c32c9 
+
+http:
+  encoding:
+    charset: UTF-8
+    enabled: true
+    force: true 
+
+# ログ設定
+logging:
+  charset:
+    console: UTF-8
+    file: UTF-8
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" 

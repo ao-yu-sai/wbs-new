@@ -8,15 +8,12 @@
         .project-row {
             cursor: pointer;
         }
-        .project-row.selected {
-            background-color: #e2e6ea;
-        }
         /* テーブルのコンパクト表示用スタイル */
         .table-compact td, 
         .table-compact th {
-            padding: 0.25rem 0.5rem;  /* 上下左右のパディングを減らす */
-            font-size: 0.875rem;      /* フォントサイズを少し小さく */
-            line-height: 1.2;         /* 行の高さを減らす */
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.2;
         }
         /* ボタンのサイズ調整 */
         .table-compact .btn-sm {
@@ -29,15 +26,41 @@
         }
         /* 説明文の省略表示用スタイル */
         .description-cell {
-            max-width: 200px;
+            max-width: 400px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             cursor: pointer;
+            font-size: 0.8rem;
         }
         .description-cell:hover {
             color: #007bff;
             text-decoration: underline;
+        }
+        /* 案件名のスタイル */
+        .project-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        /* 登録済み機能のスタイル */
+        tr.registered-function {
+            background-color: #f8f9fa;
+        }
+        tr.registered-function td {
+            color: #6c757d;
+        }
+        .custom-control-input:disabled ~ .custom-control-label::before {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+        .custom-checkbox .custom-control-input:checked:disabled ~ .custom-control-label::before {
+            background-color: rgba(0, 123, 255, 0.5);
+        }
+        /* 選択中の行のスタイル */
+        .project-row.selected,
+        #functionTableBody tr.selected,
+        #taskTableBody tr.selected {
+            background-color: #e3f2fd !important;
         }
     </style>
 </head>
@@ -57,42 +80,41 @@
             <div class="container-fluid">
                 <div class="row">
                     <!-- 案件一覧 -->
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="card">
                             <div class="card-header">
+                                <h3 class="card-title">案件一覧</h3>
                                 <div class="card-tools">
-                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#projectModal">
+                                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#projectModal">
                                         <i class="fas fa-plus"></i> 案件登録
                                     </button>
                                 </div>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-container" style="height: 70vh;">
-                                    <table class="table table-hover text-nowrap table-compact">
+                                    <table class="table table-hover text-nowrap table-compact" id="projectTable">
                                         <thead>
                                             <tr>
                                                 <th>サービス</th>
-                                                <th>チケット番号</th>
+                                                <th>チケット</th>
                                                 <th>案件名</th>
-                                                <th>説明</th>
-                                                <th>状態</th>
                                                 <th>操作</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr th:each="project : ${projects}" 
                                                 th:class="${project.isActive} ? 'project-row' : 'project-row text-muted'"
-                                                th:data-project-id="${project.ticketNumber}">
+                                                th:data-project-id="${project.ticketNumber}"
+                                                th:data-service-kbn-code="${project.serviceKbnCode}"
+                                                style="cursor: pointer;">
                                                 <td th:text="${project.category?.categoryName}"></td>
                                                 <td th:text="${project.ticketNumber}"></td>
-                                                <td th:text="${project.projectName}"></td>
-                                                <td class="description-cell" 
+                                                <td>
+                                                    <div class="project-name" th:text="${project.projectName}"></div>
+                                                    <div class="description-cell small text-muted mt-1" 
                                                     th:text="${project.description}"
                                                     th:data-description="${project.description}"
-                                                    onclick="showDescription(this)"></td>
-                                                <td>
-                                                    <span th:if="${project.isActive}" class="badge badge-success">有効</span>
-                                                    <span th:unless="${project.isActive}" class="badge badge-secondary">無効</span>
+                                                        onclick="showDescription(this)"></div>
                                                 </td>
                                                 <td>
                                                     <button type="button" 
@@ -113,11 +135,11 @@
                         </div>
                     </div>
                     
-                    <!-- 案件対象機能情報 -->
-                    <div class="col-6">
+                    <!-- 対象機能一覧 -->
+                    <div class="col-2">
                         <div class="card">
                             <div class="card-header">
-                                <h3 class="card-title">案件対象機能情報</h3>
+                                <h3 class="card-title">対象機能一覧</h3>
                                 <div class="card-tools">
                                     <button type="button" class="btn btn-primary btn-sm" id="addFunctionBtn" disabled>
                                         <i class="fas fa-plus"></i> 機能追加
@@ -126,64 +148,58 @@
                             </div>
                             <div class="card-body p-0">
                                 <div id="functionList" style="display: none; height: 70vh; overflow-y: auto;">
-                                    <form id="projectFunctionForm" class="p-3">
-                                        <div class="form-group">
-                                            <label for="functionSelect">機能</label>
-                                            <select class="form-control" id="functionSelect" name="functionCode" required>
-                                                <option value="">選択してください</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="taskKbnCode">タスク区分</label>
-                                            <select class="form-control" id="taskKbnCode" name="taskKbnCode" required>
-                                                <option value="">選択してください</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="staffEmail">担当者</label>
-                                            <select class="form-control" id="staffEmail" name="staffEmail" required>
-                                                <option value="">選択してください</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group col-md-6">
-                                                <label for="planStartDate">予定開始日</label>
-                                                <input type="date" class="form-control" id="planStartDate" name="planStartDate">
-                                            </div>
-                                            <div class="form-group col-md-6">
-                                                <label for="planEndDate">予定終了日</label>
-                                                <input type="date" class="form-control" id="planEndDate" name="planEndDate">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="planManHour">予定工数</label>
-                                            <input type="number" class="form-control" id="planManHour" name="planManHour" step="0.25">
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group col-md-6">
-                                                <label for="actualStartDate">実績開始日</label>
-                                                <input type="date" class="form-control" id="actualStartDate" name="actualStartDate">
-                                            </div>
-                                            <div class="form-group col-md-6">
-                                                <label for="actualEndDate">実績終了日</label>
-                                                <input type="date" class="form-control" id="actualEndDate" name="actualEndDate">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="actualManHour">実績工数</label>
-                                            <input type="number" class="form-control" id="actualManHour" name="actualManHour" step="0.25">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="progressRate">進捗率 (%)</label>
-                                            <input type="number" class="form-control" id="progressRate" name="progressRate" min="0" max="100">
-                                        </div>
-                                        <div class="text-right">
-                                            <button type="submit" class="btn btn-primary">保存</button>
-                                        </div>
-                                    </form>
+                                    <table class="table table-hover text-nowrap table-compact" id="functionTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="display:none;">機能コード</th>
+                                                <th>機能名</th>
+                                                <th style="width: 80px;">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="functionTableBody">
+                                        </tbody>
+                                    </table>
                                 </div>
                                 <div id="noProjectSelected" class="text-center p-3">
                                     <p class="text-muted">案件を選択してください</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- タスク一覧 -->
+                    <div class="col-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">タスク一覧</h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-primary btn-sm" id="addTaskBtn" disabled>
+                                        <i class="fas fa-plus"></i> タスク追加
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="taskList" style="display: none; height: 70vh; overflow-y: auto;">
+                                    <table class="table table-hover text-nowrap table-compact" id="taskTable">
+                                        <thead>
+                                            <tr>
+                                                <th>タスク区分</th>
+                                                <th>担当者</th>
+                                                <th>開始予定日</th>
+                                                <th>終了予定日</th>
+                                                <th>予定工数</th>
+                                                <th>実績開始日</th>
+                                                <th>実績終了日</th>
+                                                <th>実績工数</th>
+                                                <th>進捗率</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="taskTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="noFunctionSelected" class="text-center p-3">
+                                    <p class="text-muted">機能を選択してください</p>
                                 </div>
                             </div>
                         </div>
@@ -286,34 +302,153 @@
             </div>
         </div>
 
-        <!-- 機能登録モーダル -->
-        <div class="modal fade" id="functionModal" tabindex="-1" data-backdrop="static">
+        <!-- 機能削除確認モーダル -->
+        <div class="modal fade" id="deleteFunctionModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form id="functionForm" method="post">
                         <div class="modal-header">
-                            <h5 class="modal-title">機能登録</h5>
+                        <h5 class="modal-title">機能削除確認</h5>
                             <button type="button" class="close" data-dismiss="modal">
                                 <span>&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
-                            <div class="form-group">
-                                <label for="functionCode">機能コード <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="functionCode" name="functionCode" required>
+                        <p>この機能を削除してよろしいですか？</p>
+                        <p class="text-danger">この操作は取り消せません。</p>
                             </div>
-                            <div class="form-group">
-                                <label for="functionName">機能名 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="functionName" name="functionName" required>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteFunctionBtn">
+                            <i class="fas fa-trash"></i> 削除
+                        </button>
                             </div>
-                            <div class="form-group">
-                                <label for="functionDescription">説明</label>
-                                <textarea class="form-control" id="functionDescription" name="description" rows="3"></textarea>
                             </div>
-                            <div class="form-group">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="functionIsActive" name="isActive" checked>
-                                    <label class="custom-control-label" for="functionIsActive">有効</label>
+                                </div>
+                            </div>
+
+        <!-- 機能選択モーダル -->
+        <div class="modal fade" id="functionSelectModal" tabindex="-1" data-backdrop="static">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">機能選択</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- 検索フィルター -->
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="functionSearchInput" placeholder="機能名で検索...">
+                        </div>
+                        <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                            <table class="table table-hover text-nowrap table-compact">
+                                <thead style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                                    <tr>
+                                        <th style="width: 40px;">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" id="selectAllFunctions">
+                                                <label class="custom-control-label" for="selectAllFunctions"></label>
+                                            </div>
+                                        </th>
+                                        <th style="width: 10px;">機能コード</th>
+                                        <th>機能名</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="availableFunctionTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                        <button type="button" class="btn btn-primary" id="addSelectedFunctionsBtn">追加</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- タスク追加モーダル -->
+        <div class="modal fade" id="taskModal" tabindex="-1" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="taskForm" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">タスク追加</h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="taskKbnCode">タスク区分 <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="taskKbnCode" name="taskKbnCode" required>
+                                            <option value="">選択してください</option>
+                                            <th:block th:each="category : ${taskCategories}">
+                                                <option th:value="${category.categoryCode}" 
+                                                        th:text="|${category.categoryCode} - ${category.categoryName}|"></option>
+                                            </th:block>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="personInCharge">担当者</label>
+                                        <input type="text" class="form-control" id="personInCharge" name="personInCharge">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="progressRate">進捗率</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="progressRate" name="progressRate" min="0" max="100">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="plannedStartDate">開始予定日</label>
+                                        <input type="date" class="form-control" id="plannedStartDate" name="plannedStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="plannedEndDate">終了予定日</label>
+                                        <input type="date" class="form-control" id="plannedEndDate" name="plannedEndDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="plannedManHours">予定工数</label>
+                                        <input type="number" class="form-control" id="plannedManHours" name="plannedManHours" step="0.5">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="actualStartDate">実績開始日</label>
+                                        <input type="date" class="form-control" id="actualStartDate" name="actualStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="actualEndDate">実績終了日</label>
+                                        <input type="date" class="form-control" id="actualEndDate" name="actualEndDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="actualManHours">実績工数</label>
+                                        <input type="number" class="form-control" id="actualManHours" name="actualManHours" step="0.5">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -329,10 +464,17 @@
 
     <th:block layout:fragment="script">
         <script>
+            // 削除対象の案件ID
             let deleteTargetId = null;
+            // 選択中の案件ID
             let selectedProjectId = null;
+            // 削除対象の機能情報
+            let deleteFunctionInfo = null;
 
-            // 説明文クリック時の処理
+            /**
+             * 説明文クリック時の処理
+             * 説明文の全文をモーダルで表示する
+             */
             function showDescription(element) {
                 const description = element.getAttribute('data-description');
                 document.getElementById('fullDescription').textContent = description || '説明なし';
@@ -340,244 +482,407 @@
             }
 
             $(document).ready(function() {
+                // toastrの設定
+                toastr.options = {
+                    positionClass: 'toast-bottom-right',  // 右下に表示
+                    timeOut: 3000,  // 3秒後に消える
+                    closeButton: true,  // 閉じるボタンを表示
+                    progressBar: true  // プログレスバーを表示
+                };
 
-                // チケット番号入力フィールドのblurイベント処理
-                $('#ticketNumber').on('blur', function() {
-                    // 編集モードの場合は処理をスキップ
-                    if ($('#projectForm').attr('data-mode') === 'edit') {
-                        return;
-                    }
-                    
-                    const ticketNumber = $(this).val().trim();
-                    if (ticketNumber) {
-                        fetchRedmineTicket(ticketNumber);
-                    }
-                });
-
-                function fetchRedmineTicket(ticketNumber) {
-                    $.ajax({
-                        url: `/api/redmine/issues/${ticketNumber}`,
-                        method: 'GET',
-                        success: function(response) {
-                            const issue = JSON.parse(response).issue;
-                            
-                            // フォームに値を設定
-                            $('#projectName').val(issue.subject);
-                            $('#description').val(issue.description || '');
-                            
-                            // 成功メッセージを表示
-                            toastr.success('チケット情報を取得しました');
-                        },
-                        error: function(xhr) {
-                            // エラーメッセージを表示
-                            toastr.error('チケット情報の取得に失敗しました');
-                            console.error('Redmine API Error:', xhr);
-                        }
-                    });
-                }
-
-                // 編集ボタンの処理
-                $('.edit-btn').click(function() {
-                    const projectId = $(this).data('project-id');
-                    // プロジェクト情報を取得
-                    $.get(`/projects/${projectId}/edit`)
-                        .done(function(project) {
-                            // モーダルにデータを設定
-                            $('#projectForm').attr('data-mode', 'edit');
-                            $('#projectForm').attr('data-project-id', projectId);
-                            $('#ticketNumber').val(project.ticketNumber);
-                            $('#ticketNumber').prop('readonly', true);
-                            $('#projectName').val(project.projectName);
-                            $('#description').val(project.description);
-                            $('#isActive').prop('checked', project.isActive);
-                            $('#categoryId').val(project.serviceKbnCode || '');
-                            
-                            // モーダルのタイトルを変更
-                            $('.modal-title').text('案件編集');
-                            
-                            // モーダルを表示
-                            $('#projectModal').modal('show');
-                        })
-                        .fail(function(xhr) {
-                            toastr.error('プロジェクト情報の取得に失敗しました: ' + xhr.responseText);
-                        });
-                });
-
-                // フォーム送信処理を修正
-                $('#projectForm').submit(function(e) {
-                    e.preventDefault();
-                    const mode = $(this).attr('data-mode');
-                    const projectId = $(this).attr('data-project-id');
-                    
-                    const url = mode === 'edit' 
-                        ? `/projects/${projectId}`
-                        : '/projects';
-                    
-                    const formData = {
-                        ticketNumber: $('#ticketNumber').val(),
-                        projectName: $('#projectName').val(),
-                        description: $('#description').val(),
-                        serviceKbnCode: $('#categoryId').val(),
-                        isActive: $('#isActive').prop('checked')
-                    };
-                    
-                    $.post(url, $(this).serialize())
-                        .done(function() {
-                            $('#projectModal').modal('hide');
-                            toastr.success('保存しました');
-                            location.reload();
-                        })
-                        .fail(function(xhr) {
-                            toastr.error('保存に失敗しました：' + xhr.responseText);
-                        });
-                });
-
-                // 削除ボタンの処理を修正
-                $('.delete-btn').click(function() {
-                    deleteTargetId = $(this).data('project-id');
-                    $('#deleteConfirmModal').modal('show');
-                });
-
-                // 削除確認ボタンの処理
-                $('#confirmDeleteBtn').click(function() {
-                    if (deleteTargetId) {
-                        $.post(`/projects/${deleteTargetId}/delete`)
-                            .done(function() {
-                                $('#deleteConfirmModal').modal('hide');
-                                toastr.success('案件を削除しました');
-                                location.reload();
-                            })
-                            .fail(function(xhr) {
-                                $('#deleteConfirmModal').modal('hide');
-                                toastr.error('削除に失敗しました：' + xhr.responseText);
-                            });
-                    }
-                });
-
-                // 削除モーダルが閉じられたときの処理
-                $('#deleteConfirmModal').on('hidden.bs.modal', function() {
-                    deleteTargetId = null;
-                });
-
-                // モーダルが閉じられたときの処理を追加
-                $('#projectModal').on('hidden.bs.modal', function() {
-                    // フォームをリセット
-                    $('#projectForm').trigger('reset');
-                    $('#projectForm').removeAttr('data-mode');
-                    $('#projectForm').removeAttr('data-project-id');
-                    $('#ticketNumber').prop('readonly', false);
-                    $('.modal-title').text('案件登録');
-                });
-
-                // 案件行のクリックイベント
+                /**
+                 * 案件行のクリックイベント
+                 * 案件を選択し、対応する機能一覧を表示する
+                 */
                 $(document).on('click', '.project-row', function(e) {
-                    // 編集・削除ボタンのクリックイベントが伝播しないようにする
-                    if ($(e.target).closest('.btn').length > 0) {
+                    // 編集・削除ボタンと説明文のクリックイベントが伝播しないようにする
+                    if ($(e.target).closest('.btn').length > 0 || $(e.target).closest('.description-cell').length > 0) {
                         return;
                     }
                     
                     const projectId = $(this).data('project-id');
+                    const serviceKbnCode=$(this).data('service-kbn-code');
                     
-                    // 選択状態の更新
+                    // 選択状態の更新（背景色の変更）
                     $('.project-row').removeClass('selected');
                     $(this).addClass('selected');
                     
-                    // 機能登録ボタンを有効化
-                    $('#addFunctionBtn').prop('disabled', false);
                     if (selectedProjectId !== projectId) {
                         selectedProjectId = projectId;
-                        loadFunctions(projectId);
+                        // 機能一覧を読み込み
+                        loadProjectFunctions(serviceKbnCode,projectId);
+                        // 機能追加ボタンを有効化
+                        $('#addFunctionBtn').prop('disabled', false);
                     }
                 });
 
-                // 機能一覧の取得
-                function loadFunctions(projectId) {
+                /**
+                 * 機能追加ボタンのクリックイベント
+                 * 選択中の案件のサービス区分に紐づく機能一覧を表示する
+                 */
+                $('#addFunctionBtn').click(function() {
+                    if (!selectedProjectId) return;
+                    
+                    // 選択中の案件行からサービス区分コードを取得
+                    const selectedRow = $(`tr[data-project-id="${selectedProjectId}"]`);
+                    const serviceKbnCode = selectedRow.data('service-kbn-code');
+
+                    // 現在登録されている機能コードを取得
+                    const registeredFunctionCodes = new Set();
+                    $('#functionTableBody tr').each(function() {
+                        const functionCode = $(this).find('td:first').text();
+                        if (functionCode) {
+                            registeredFunctionCodes.add(functionCode);
+                        }
+                    });
+
+                    // サービス区分に紐づく機能一覧を取得して表示
+                    $.get(`/projects/${serviceKbnCode}/available-functions`)
+                        .done(function(functions) {
+                            const tbody = $('#availableFunctionTableBody');
+                            tbody.empty();
+                            
+                            // 機能一覧をテーブルに表示
+                            functions.forEach(function(func) {
+                                const isRegistered = registeredFunctionCodes.has(func.functionCode);
+                                const row = $('<tr>');
+                                if (isRegistered) {
+                                    row.addClass('registered-function');
+                                }
+                                const checkbox = `
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input function-checkbox" 
+                                               id="func_${func.functionCode}" 
+                                               value="${func.functionCode}"
+                                               ${isRegistered ? 'checked disabled' : ''}>
+                                        <label class="custom-control-label" for="func_${func.functionCode}"></label>
+                                    </div>
+                                `;
+                                row.append($('<td>').html(checkbox));
+                                row.append($('<td>').text(func.functionCode));
+                                row.append($('<td>').text(func.functionName));
+                                tbody.append(row);
+                            });
+
+                            $('#functionSelectModal').modal('show');
+                        })
+                        .fail(function(xhr) {
+                            toastr.error('機能一覧の取得に失敗しました：' + xhr.responseText);
+                        });
+                });
+
+                /**
+                 * 利用可能な機能一覧の取得と表示
+                 * @param {string} serviceKbnCode - サービス区分コード
+                 */
+                function loadAvailableFunctions(serviceKbnCode) {
+                    $.get(`/api/functions/service/${serviceKbnCode}`)
+                        .done(function(functions) {
+                            const tbody = $('#availableFunctionTableBody');
+                            tbody.empty();
+                            
+                            // 機能一覧をテーブルに表示
+                            functions.forEach(function(func) {
+                                const row = $('<tr>');
+                                row.append($('<td style="display:none;">').text(func.functionCode));
+                                row.append($('<td>').text(func.functionCode));
+                                row.append($('<td>').text(func.function?.functionName || ''));
+                                row.append($('<td>').html(`
+                                    <button type="button" class="btn btn-danger btn-sm delete-function-btn"
+                                            data-function-code="${func.functionCode}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                `));
+                                tbody.append(row);
+                            });
+                        })
+                        .fail(function(xhr) {
+                            toastr.error('機能一覧の取得に失敗しました：' + xhr.responseText);
+                        });
+                }
+
+                /**
+                 * 全選択チェックボックスの処理
+                 * 全ての機能を選択/解除する
+                 */
+                $('#selectAllFunctions').change(function() {
+                    const isChecked = $(this).prop('checked');
+                    // 無効化されていないチェックボックスのみを対象にする
+                    $('.function-checkbox:not(:disabled)').prop('checked', isChecked);
+                    // 追加ボタンの有効/無効を更新
+                    updateAddButtonState();
+                });
+
+                /**
+                 * チェックボックスの状態変更時の処理
+                 * 選択された機能の数に応じて追加ボタンの有効/無効を切り替える
+                 */
+                $(document).on('change', '.function-checkbox', function() {
+                    updateAddButtonState();
+                    // 全選択チェックボックスの状態を更新
+                    updateSelectAllCheckboxState();
+                });
+
+                /**
+                 * 追加ボタンの状態を更新する
+                 */
+                function updateAddButtonState() {
+                    const checkedCount = $('.function-checkbox:checked:not(:disabled)').length;
+                    $('#addSelectedFunctionsBtn').prop('disabled', checkedCount === 0);
+                }
+
+                /**
+                 * 全選択チェックボックスの状態を更新する
+                 */
+                function updateSelectAllCheckboxState() {
+                    const totalCheckboxes = $('.function-checkbox:not(:disabled)').length;
+                    const checkedCheckboxes = $('.function-checkbox:checked:not(:disabled)').length;
+                    
+                    $('#selectAllFunctions').prop({
+                        checked: totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes,
+                        indeterminate: checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes
+                    });
+                }
+
+                /**
+                 * 選択された機能の追加処理
+                 * チェックされた機能を案件に紐付ける
+                 */
+                $('#addSelectedFunctionsBtn').click(function() {
+                    const selectedFunctions = [];
+                    $('.function-checkbox:checked:not(:disabled)').each(function() {
+                        selectedFunctions.push($(this).val());
+                    });
+
+                    if (selectedFunctions.length === 0) {
+                        toastr.warning('追加可能な機能が選択されていません');
+                        return;
+                    }
+
+                    // 選択中の案件のサービス区分コードを取得
+                    const selectedRow = $(`tr[data-project-id="${selectedProjectId}"]`);
+                    const serviceKbnCode = selectedRow.data('service-kbn-code');
+
+                    // 選択された機能を案件に紐付ける
+                    $.ajax({
+                        url: `/projects/${selectedProjectId}/project-functions`,
+                        method: 'POST',
+                        traditional: true,
+                        data: {
+                            serviceKbnCode: serviceKbnCode,
+                            functionCodes: selectedFunctions
+                        },
+                        success: function() {
+                            $('#functionSelectModal').modal('hide');
+                            toastr.success('機能を追加しました');
+                            // 機能一覧を再読み込み
+                            loadProjectFunctions(serviceKbnCode, selectedProjectId);
+                        },
+                        error: function(xhr) {
+                            toastr.error('機能の追加に失敗しました：' + xhr.responseText);
+                        }
+                    });
+                });
+
+                /**
+                 * 機能選択モーダルが開かれたときの処理
+                 */
+                $('#functionSelectModal').on('shown.bs.modal', function() {
+                    $('#functionSearchInput').val('').focus();
+                    // 追加ボタンを無効化
+                    $('#addSelectedFunctionsBtn').prop('disabled', true);
+                });
+
+                /**
+                 * 機能選択モーダルが閉じられたときの処理
+                 */
+                $('#functionSelectModal').on('hidden.bs.modal', function() {
+                    $('#selectAllFunctions').prop('checked', false);
+                    $('#availableFunctionTableBody').empty();
+                    // 追加ボタンを無効化
+                    $('#addSelectedFunctionsBtn').prop('disabled', true);
+                });
+
+                /**
+                 * 機能一覧の取得と表示
+                 * @param {string} serviceKbnCode - サービス区分コード
+                 * @param {string} projectId - 案件ID（チケット番号）
+                 */
+                function loadProjectFunctions(serviceKbnCode, projectId) {
                     $('#noProjectSelected').hide();
                     $('#functionList').show();
                     
-                    // 機能一覧の取得
-                    $.get(`/projects/${projectId}/available-functions`)
-                        .done(function(functions) {
-                            const select = $('#functionSelect');
-                            select.empty().append('<option value="">選択してください</option>');
-                            functions.forEach(function(func) {
-                                select.append(`<option value="${func.functionCode}">${func.functionName}</option>`);
-                            });
-                        });
+                    $.get(`/projects/${projectId}/project-functions`, {
+                        serviceKbnCode: serviceKbnCode
+                    })
+                    .done(function(functions) {
+                        const tbody = $('#functionTableBody');
+                        tbody.empty();
+                        
+                        if (functions.length === 0) {
+                            tbody.append($('<tr>').append(
+                                $('<td colspan="3" class="text-center text-muted">').text('対象機能が登録されていません')
+                            ));
+                            return;
+                        }
 
-                    // タスク区分の取得
-                    $.get('/api/categories/TASK_KBN')
-                        .done(function(categories) {
-                            const select = $('#taskKbnCode');
-                            select.empty().append('<option value="">選択してください</option>');
-                            categories.forEach(function(category) {
-                                select.append(`<option value="${category.categoryCode}">${category.categoryName}</option>`);
-                            });
+                        functions.forEach(function(func) {
+                            const row = $('<tr>');
+                            row.append($('<td style="display:none;">').text(func.functionCode));
+                            row.append($('<td>').text(func.function?.functionName || ''));
+                            row.append($('<td>').html(`
+                                <button type="button" class="btn btn-danger btn-sm delete-function-btn"
+                                        data-function-code="${func.functionCode}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            `));
+                            tbody.append(row);
                         });
-
-                    // 担当者一覧の取得
-                    $.get('/api/staff')
-                        .done(function(staff) {
-                            const select = $('#staffEmail');
-                            select.empty().append('<option value="">選択してください</option>');
-                            staff.forEach(function(s) {
-                                select.append(`<option value="${s.email}">${s.staffName}</option>`);
-                            });
-                        });
+                    })
+                    .fail(function(xhr) {
+                        toastr.error('機能一覧の取得に失敗しました：' + xhr.responseText);
+                    });
                 }
 
-                // 機能登録ボタンのクリックイベント
-                $('#addFunctionBtn').click(function() {
-                    $('#functionForm').trigger('reset');
-                    $('#functionModal').modal('show');
-                });
+                // 機能行のクリックイベント
+                $(document).on('click', '#functionTableBody tr', function(e) {
+                    // 削除ボタンのクリックイベントが伝播しないようにする
+                    if ($(e.target).closest('.btn').length > 0) {
+                        return;
+                    }
 
-                // 機能登録フォームの送信処理
-                $('#functionForm').submit(function(e) {
-                    e.preventDefault();
-                    const form = $(this);
+                    // 選択状態の更新（背景色の変更）
+                    $('#functionTableBody tr').removeClass('selected');
+                    $(this).addClass('selected');
+
+                    // 機能コードを取得
+                    const functionCode = $(this).find('td:first').text();
+
+                    // タスク一覧を取得
+                    loadTaskList(selectedProjectId, functionCode);
                     
-                    // 選択された案件のサービス区分コードを取得
-                    $.get(`/projects/${selectedProjectId}/service-kbn`)
-                        .done(function(serviceKbnCode) {
-                            form.find('input[name="serviceKbnCode"]').remove();
-                            form.append(`<input type="hidden" name="serviceKbnCode" value="${serviceKbnCode}">`);
-                            
-                            $.post('/functions', form.serialize())
-                                .done(function() {
-                                    $('#functionModal').modal('hide');
-                                    toastr.success('機能を登録しました');
-                                    loadFunctions(selectedProjectId);
-                                })
-                                .fail(function(xhr) {
-                                    toastr.error('登録に失敗しました：' + xhr.responseText);
-                                });
-                        })
-                        .fail(function(xhr) {
-                            toastr.error('サービス区分の取得に失敗しました：' + xhr.responseText);
+                    // タスク追加ボタンを有効化
+                    $('#addTaskBtn').prop('disabled', false);
+                });
+
+                /**
+                 * タスク一覧の取得と表示
+                 */
+                function loadTaskList(ticketNumber, functionCode) {
+                    $('#noFunctionSelected').hide();
+                    $('#taskList').show();
+
+                    // 選択中の案件のサービス区分コードを取得
+                    const selectedRow = $(`tr[data-project-id="${ticketNumber}"]`);
+                    const serviceKbnCode = selectedRow.data('service-kbn-code');
+
+                    $.get(`/projects/${ticketNumber}/functions/${functionCode}/tasks`, {
+                        serviceKbnCode: serviceKbnCode
+                    })
+                    .done(function(tasks) {
+                        const tbody = $('#taskTableBody');
+                        tbody.empty();
+
+                        if (tasks.length === 0) {
+                            tbody.append($('<tr>').append(
+                                $('<td colspan="9" class="text-center text-muted">').text('タスクが登録されていません')
+                            ));
+                            return;
+                        }
+
+                        tasks.forEach(function(task) {
+                            const row = $('<tr>');
+                            row.append($('<td>').text(task.taskKbnCode));
+                            row.append($('<td>').text(task.personInCharge || ''));
+                            row.append($('<td>').text(task.plannedStartDate || ''));
+                            row.append($('<td>').text(task.plannedEndDate || ''));
+                            row.append($('<td>').text(task.plannedManHours || ''));
+                            row.append($('<td>').text(task.actualStartDate || ''));
+                            row.append($('<td>').text(task.actualEndDate || ''));
+                            row.append($('<td>').text(task.actualManHours || ''));
+                            row.append($('<td>').text(task.progressRate ? task.progressRate + '%' : ''));
+                            tbody.append(row);
                         });
+                    })
+                    .fail(function(xhr) {
+                        toastr.error('タスク一覧の取得に失敗しました：' + xhr.responseText);
+                    });
+                }
+
+                // タスク追加ボタンのクリックイベント
+                $('#addTaskBtn').click(function() {
+                    if (!selectedProjectId) return;
+
+                    // 選択中の機能行から機能コードを取得
+                    const selectedFunctionRow = $('#functionTableBody tr.selected');
+                    if (selectedFunctionRow.length === 0) {
+                        toastr.warning('機能を選択してください');
+                        return;
+                    }
+
+                    const functionCode = selectedFunctionRow.find('td:first').text();
+                    
+                    // 選択中の案件のサービス区分コードを取得
+                    const selectedRow = $(`tr[data-project-id="${selectedProjectId}"]`);
+                    const serviceKbnCode = selectedRow.data('service-kbn-code');
+
+                    // タスク追加モーダルを表示
+                    $('#taskModal').modal('show');
                 });
 
-                // 機能登録モーダルが閉じられたときの処理
-                $('#functionModal').on('hidden.bs.modal', function() {
-                    $('#functionForm').trigger('reset');
+                // タスクフォームの送信処理
+                $('#taskForm').submit(function(e) {
+                    e.preventDefault();
+
+                    // 選択中の機能行から機能コードを取得
+                    const selectedFunctionRow = $('#functionTableBody tr.selected');
+                    const functionCode = selectedFunctionRow.find('td:first').text();
+                    
+                    // 選択中の案件のサービス区分コードを取得
+                    const selectedRow = $(`tr[data-project-id="${selectedProjectId}"]`);
+                    const serviceKbnCode = selectedRow.data('service-kbn-code');
+
+                    // フォームデータを取得
+                    const formData = {
+                        taskKbnCode: $('#taskKbnCode').val(),
+                        personInCharge: $('#personInCharge').val(),
+                        plannedStartDate: $('#plannedStartDate').val(),
+                        plannedEndDate: $('#plannedEndDate').val(),
+                        plannedManHours: $('#plannedManHours').val(),
+                        actualStartDate: $('#actualStartDate').val(),
+                        actualEndDate: $('#actualEndDate').val(),
+                        actualManHours: $('#actualManHours').val(),
+                        progressRate: $('#progressRate').val(),
+                        serviceKbnCode: serviceKbnCode,
+                        functionCode: functionCode
+                    };
+
+                    // タスクを登録
+                    $.ajax({
+                        url: `/projects/${selectedProjectId}/functions/${functionCode}/tasks`,
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(formData),
+                        success: function() {
+                            $('#taskModal').modal('hide');
+                            toastr.success('タスクを登録しました');
+                            // タスク一覧を再読み込み
+                            loadTaskList(selectedProjectId, functionCode);
+                            // フォームをリセット
+                            $('#taskForm').trigger('reset');
+                        },
+                        error: function(xhr) {
+                            toastr.error('タスクの登録に失敗しました：' + xhr.responseText);
+                        }
+                    });
                 });
 
-                // ヘルパー関数
-                function formatDateRange(start, end) {
-                    if (!start && !end) return '';
-                    return `${formatDate(start)} ～ ${formatDate(end)}`;
-                }
-
-                function formatDate(date) {
-                    return date ? new Date(date).toLocaleDateString() : '';
-                }
-
-                function formatNumber(num) {
-                    return num ? num.toLocaleString() : '';
-                }
+                // タスクモーダルが閉じられたときの処理
+                $('#taskModal').on('hidden.bs.modal', function() {
+                    $('#taskForm').trigger('reset');
+                });
             });
         </script>
     </th:block>
 </body>
-</html> 
+</html>
