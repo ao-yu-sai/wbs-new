@@ -234,43 +234,48 @@ CREATE INDEX idx_daily_work_task ON daily_work USING btree (task_id);
 CREATE INDEX idx_daily_work_staff ON daily_work USING btree (staff_id);
 CREATE INDEX idx_daily_work_date ON daily_work USING btree (work_date);
 
--- 案件対象機能情報
-CREATE TABLE project_function_info (
-    service_kbn_code varchar(50) NOT NULL,
-    ticket_number varchar(50) NOT NULL,
-    function_code varchar(50) NOT NULL,
-    task_kbn_code varchar(50) NOT NULL,
-    staff_email varchar(256) NOT NULL,
-    plan_start_date date NULL,
-    plan_end_date date NULL,
-    plan_man_hour numeric(7,2) NULL,
-    actual_start_date date NULL,
-    actual_end_date date NULL,
-    actual_man_hour numeric(7,2) NULL,
-    progress_rate int4 DEFAULT 0 NULL,
-    delay_days int4 DEFAULT 0 NULL,
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT project_function_info_pkey PRIMARY KEY (service_kbn_code, ticket_number, function_code, task_kbn_code, staff_email)
+-- 案件機能別タスク情報テーブル
+CREATE TABLE project_function_task_info (
+    service_kbn_code VARCHAR(20) NOT NULL,
+    ticket_number VARCHAR(20) NOT NULL,
+    function_code VARCHAR(20) NOT NULL,
+    task_kbn_code VARCHAR(20) NOT NULL,
+    person_in_charge VARCHAR(50),
+    planned_start_date DATE,
+    planned_end_date DATE,
+    planned_man_hours DECIMAL(5,2),
+    actual_start_date DATE,
+    actual_end_date DATE,
+    actual_man_hours DECIMAL(5,2),
+    progress_rate INTEGER,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (service_kbn_code, ticket_number, function_code, task_kbn_code)
 );
 
-COMMENT ON TABLE project_function_info IS '案件対象機能情報';
-COMMENT ON COLUMN project_function_info.service_kbn_code IS 'サービス区分コード';
-COMMENT ON COLUMN project_function_info.ticket_number IS 'チケット番号';
-COMMENT ON COLUMN project_function_info.function_code IS '機能コード';
-COMMENT ON COLUMN project_function_info.task_kbn_code IS 'タスク区分コード';
-COMMENT ON COLUMN project_function_info.staff_email IS '担当者メールアドレス';
-COMMENT ON COLUMN project_function_info.plan_start_date IS '予定開始日';
-COMMENT ON COLUMN project_function_info.plan_end_date IS '予定終了日';
-COMMENT ON COLUMN project_function_info.plan_man_hour IS '予定工数';
-COMMENT ON COLUMN project_function_info.actual_start_date IS '実績開始日';
-COMMENT ON COLUMN project_function_info.actual_end_date IS '実績終了日';
-COMMENT ON COLUMN project_function_info.actual_man_hour IS '実績工数';
-COMMENT ON COLUMN project_function_info.progress_rate IS '進捗率';
-COMMENT ON COLUMN project_function_info.delay_days IS '遅延日数';
-COMMENT ON COLUMN project_function_info.created_at IS '作成日時';
-COMMENT ON COLUMN project_function_info.updated_at IS '更新日時';
+-- カラムコメントの追加
+COMMENT ON TABLE project_function_task_info IS '案件機能別タスク情報';
+COMMENT ON COLUMN project_function_task_info.service_kbn_code IS 'サービス区分コード';
+COMMENT ON COLUMN project_function_task_info.ticket_number IS 'チケット番号';
+COMMENT ON COLUMN project_function_task_info.function_code IS '機能コード';
+COMMENT ON COLUMN project_function_task_info.task_kbn_code IS 'タスク区分コード';
+COMMENT ON COLUMN project_function_task_info.person_in_charge IS '担当者';
+COMMENT ON COLUMN project_function_task_info.planned_start_date IS '開始予定日';
+COMMENT ON COLUMN project_function_task_info.planned_end_date IS '終了予定日';
+COMMENT ON COLUMN project_function_task_info.planned_man_hours IS '予定工数';
+COMMENT ON COLUMN project_function_task_info.actual_start_date IS '実績開始日';
+COMMENT ON COLUMN project_function_task_info.actual_end_date IS '実績終了日';
+COMMENT ON COLUMN project_function_task_info.actual_man_hours IS '実績工数';
+COMMENT ON COLUMN project_function_task_info.progress_rate IS '進捗率';
+COMMENT ON COLUMN project_function_task_info.created_at IS '作成日時';
+COMMENT ON COLUMN project_function_task_info.updated_at IS '更新日時'; 
 
-CREATE INDEX idx_project_function_ticket ON project_function_info USING btree (ticket_number);
-CREATE INDEX idx_project_function_staff ON project_function_info USING btree (staff_email);
-CREATE INDEX idx_project_function_composite ON project_function_info USING btree (service_kbn_code, function_code); 
+-- 必要な項目のみのテーブルを作成
+CREATE TABLE project_function_info (
+    ticket_number VARCHAR(20) NOT NULL,
+    service_kbn_code VARCHAR(20) NOT NULL,
+    function_code VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (ticket_number, service_kbn_code, function_code)
+); 

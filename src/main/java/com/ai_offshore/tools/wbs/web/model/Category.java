@@ -6,6 +6,7 @@ import lombok.Data;
 public class Category {
     private String categoryName;
     private String categoryCode;
+    private String newCategoryCode;
     private String categoryTypeCode;
     private String description;
     private Integer displayOrder;
@@ -28,5 +29,13 @@ public class Category {
     
     public void setCategoryTypeCode(String categoryTypeCode) {
         this.categoryTypeCode = categoryTypeCode;
+    }
+    
+    public String getNewCategoryCode() {
+        return newCategoryCode;
+    }
+    
+    public void setNewCategoryCode(String newCategoryCode) {
+        this.newCategoryCode = newCategoryCode;
     }
 } 

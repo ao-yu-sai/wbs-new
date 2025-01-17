@@ -28,9 +28,9 @@ public interface ProjectMapper {
     Project findById(String ticketNumber,String serviceKbnCode);
     
     @Insert("INSERT INTO project (ticket_number, project_name, description, " +
-            "project_code, service_kbn_code, is_active) " +
+            "service_kbn_code, is_active) " +
             "VALUES (#{ticketNumber}, #{projectName}, #{description}, " +
-            "CONCAT('CODE_', #{ticketNumber}), #{serviceKbnCode}, #{isActive})")
+            "#{serviceKbnCode}, #{isActive})")
     void insert(Project project);
     
     @Update("UPDATE project SET project_name = #{projectName}, description = #{description}, " +

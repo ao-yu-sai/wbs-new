@@ -32,7 +32,9 @@ public interface CategoryMapper {
             "#{categoryTypeCode}, #{description}, #{displayOrder}, #{isActive})")
     void insert(Category category);
 
-    @Update("UPDATE category SET category_name = #{categoryName}, " +
+    @Update("UPDATE category SET " +
+            "category_code = #{newCategoryCode}, " +
+            "category_name = #{categoryName}, " +
             "description = #{description}, " +
             "display_order = #{displayOrder}, " +
             "is_active = #{isActive} " +

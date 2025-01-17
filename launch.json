@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug WbsWebApplication",
+            "request": "launch",
+            "mainClass": "com.ai_offshore.tools.wbs.web.WbsWebApplication",
+            "env": {
+                "JAVA_TOOL_OPTIONS": "-Dfile.encoding=UTF-8"
+            }
+        }
+    ]
+} 

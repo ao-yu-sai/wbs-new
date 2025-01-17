@@ -169,6 +169,7 @@
                 <div class="modal-content">
                     <form id="categoryForm" method="post" action="/category-types/{code}">
                         <input type="hidden" id="categoryId" name="categoryId">
+                        <input type="hidden" id="originalCategoryCode" name="originalCategoryCode">
                         <div class="modal-header">
                             <h5 class="modal-title">区分登録・編集</h5>
                             <button type="button" class="close" data-dismiss="modal">
@@ -296,6 +297,7 @@
                         var modal = $('#categoryModal');
                         modal.find('form')[0].reset();
                         modal.find('#categoryId').val('');
+                        modal.find('#originalCategoryCode').val('');
                         modal.find('#displayOrder').val(0);
                         modal.find('.modal-title').text('区分新規作成');
                         modal.find('form').attr('action', `/category-types/${selectedTypeCode}/categories`);
@@ -313,6 +315,7 @@
                     
                     modal.find('.modal-title').text('区分編集');
                     modal.find('#categoryCode').val(categoryCode);
+                    modal.find('#originalCategoryCode').val(categoryCode);
                     modal.find('#categoryName').val(button.data('category-name'));
                     modal.find('#description').val(button.data('description'));
                     modal.find('#displayOrder').val(button.data('display-order'));
@@ -358,15 +361,24 @@
                 $('#categoryForm').submit(function(e) {
                     e.preventDefault();
                     var form = $(this);
+                    var formData = form.serialize();
                     
-                    // デバッグ用にフォームデータを確認
-                    console.log('Form data:', form.serialize());
-                    console.log('Selected Type Code:', selectedTypeCode);
+                    // 編集モードの場合のみ、元の区分コードを追加
+                    if ($('#categoryModal .modal-title').text() === '区分編集') {
+                        // 現在の区分コードと元の区分コードが異なる場合のみ更新用のパラメータを追加
+                        var currentCode = $('#categoryCode').val();
+                        var originalCode = $('#originalCategoryCode').val();
+                        if (currentCode !== originalCode) {
+                            formData += '&newCategoryCode=' + currentCode;
+                            formData += '&categoryCode=' + originalCode;
+                        }
+                    }
                     
-                    $.post(form.attr('action'), form.serialize())
+                    $.post(form.attr('action'), formData)
                         .done(function() {
                             $('#categoryModal').modal('hide');
                             loadCategories(selectedTypeCode);
+                            toastr.success('保存しました');
                         })
                         .fail(function(xhr) {
                             console.error('Error:', xhr);

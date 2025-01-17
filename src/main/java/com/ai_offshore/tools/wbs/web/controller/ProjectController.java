@@ -2,6 +2,8 @@ package com.ai_offshore.tools.wbs.web.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,23 +21,29 @@ import com.ai_offshore.tools.wbs.web.model.Category;
 import com.ai_offshore.tools.wbs.web.model.Function;
 import com.ai_offshore.tools.wbs.web.model.Project;
 import com.ai_offshore.tools.wbs.web.model.ProjectFunction;
+import com.ai_offshore.tools.wbs.web.model.RedmineIssue;
 import com.ai_offshore.tools.wbs.web.service.CategoryService;
 import com.ai_offshore.tools.wbs.web.service.ProjectService;
+import com.ai_offshore.tools.wbs.web.client.RedmineClient;
 
 @Controller
 @RequestMapping("/projects")
 public class ProjectController {
     
+    private static final Logger logger = LoggerFactory.getLogger(ProjectController.class);
+    
     private final ProjectService projectService;
     private final CategoryService categoryService;
     private final FunctionMapper functionMapper;
     private final ProjectFunctionMapper projectFunctionMapper;
+    private final RedmineClient redmineClient;
     
-    public ProjectController(ProjectService projectService, CategoryService categoryService, FunctionMapper functionMapper, ProjectFunctionMapper projectFunctionMapper) {
+    public ProjectController(ProjectService projectService, CategoryService categoryService, FunctionMapper functionMapper, ProjectFunctionMapper projectFunctionMapper, RedmineClient redmineClient) {
         this.projectService = projectService;
         this.categoryService = categoryService;
         this.functionMapper = functionMapper;
         this.projectFunctionMapper = projectFunctionMapper;
+        this.redmineClient = redmineClient;
     }
     
     @GetMapping
@@ -127,6 +135,21 @@ public class ProjectController {
             return ResponseEntity.ok(functions);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/check-ticket/{ticketNumber}")
+    @ResponseBody
+    public ResponseEntity<?> checkTicketFromRedmine(@PathVariable String ticketNumber) {
+        try {
+            RedmineIssue redmineIssue = redmineClient.getIssue(ticketNumber);
+            if (redmineIssue != null && redmineIssue.getIssue() != null) {
+                return ResponseEntity.ok(redmineIssue);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving Redmine issue: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("チケット情報の取得に失敗しました: " + e.getMessage());
         }
     }
 } 

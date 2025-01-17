@@ -30,6 +30,9 @@ public class CategoryService {
     }
     
     public void update(Category category) {
+        if (category.getNewCategoryCode() == null) {
+            category.setNewCategoryCode(category.getCategoryCode());
+        }
         categoryMapper.update(category);
     }
     

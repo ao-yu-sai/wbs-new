@@ -13,6 +13,8 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 public class WbsWebApplication {
     public static void main(String[] args) {
         System.setProperty("file.encoding", "UTF-8");
+        System.setProperty("sun.stdout.encoding", "UTF-8");
+        System.setProperty("sun.stderr.encoding", "UTF-8");
         SpringApplication.run(WbsWebApplication.class, args);
     }
 

@@ -546,7 +546,7 @@
                  * @param {string} serviceKbnCode - サービス区分コード
                  */
                 function loadAvailableFunctions(serviceKbnCode) {
-                    $.get(`/api/functions/service/${serviceKbnCode}`)
+                    $.get(`/projects/${serviceKbnCode}/available-functions`)
                         .done(function(functions) {
                             const tbody = $('#availableFunctionTableBody');
                             tbody.empty();
@@ -554,17 +554,36 @@
                             // 機能一覧をテーブルに表示
                             functions.forEach(function(func) {
                                 const row = $('<tr>');
-                                row.append($('<td style="display:none;">').text(func.functionCode));
+                                const checkbox = `
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input function-checkbox" 
+                                               id="func_${func.functionCode}" 
+                                               value="${func.functionCode}">
+                                        <label class="custom-control-label" for="func_${func.functionCode}"></label>
+                                    </div>
+                                `;
+                                row.append($('<td>').html(checkbox));
                                 row.append($('<td>').text(func.functionCode));
-                                row.append($('<td>').text(func.function?.functionName || ''));
-                                row.append($('<td>').html(`
-                                    <button type="button" class="btn btn-danger btn-sm delete-function-btn"
-                                            data-function-code="${func.functionCode}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                `));
+                                row.append($('<td>').text(func.functionName || ''));
                                 tbody.append(row);
                             });
+
+                            // 検索フィールドの値で初期フィルタリング
+                            const searchText = $('#functionSearchInput').val().toLowerCase();
+                            if (searchText) {
+                                $('#availableFunctionTableBody tr').each(function() {
+                                    const functionCode = $(this).find('td:eq(1)').text().toLowerCase();
+                                    const functionName = $(this).find('td:eq(2)').text().toLowerCase();
+                                    
+                                    const isMatch = functionCode.includes(searchText) || 
+                                                  functionName.includes(searchText);
+                                    
+                                    $(this).toggle(isMatch);
+                                });
+                            }
+
+                            // 全選択チェックボックスの状態を更新
+                            updateSelectAllCheckboxState();
                         })
                         .fail(function(xhr) {
                             toastr.error('機能一覧の取得に失敗しました：' + xhr.responseText);
@@ -577,8 +596,8 @@
                  */
                 $('#selectAllFunctions').change(function() {
                     const isChecked = $(this).prop('checked');
-                    // 無効化されていないチェックボックスのみを対象にする
-                    $('.function-checkbox:not(:disabled)').prop('checked', isChecked);
+                    // 表示されている行の中で、無効化されていないチェックボックスのみを対象にする
+                    $('.function-checkbox:visible:not(:disabled)').prop('checked', isChecked);
                     // 追加ボタンの有効/無効を更新
                     updateAddButtonState();
                 });
@@ -605,12 +624,15 @@
                  * 全選択チェックボックスの状態を更新する
                  */
                 function updateSelectAllCheckboxState() {
-                    const totalCheckboxes = $('.function-checkbox:not(:disabled)').length;
-                    const checkedCheckboxes = $('.function-checkbox:checked:not(:disabled)').length;
+                    // 表示されている行のみを対象にする
+                    const visibleCheckboxes = $('.function-checkbox:visible:not(:disabled)');
+                    const checkedVisibleCheckboxes = visibleCheckboxes.filter(':checked');
                     
                     $('#selectAllFunctions').prop({
-                        checked: totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes,
-                        indeterminate: checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes
+                        checked: visibleCheckboxes.length > 0 && 
+                                visibleCheckboxes.length === checkedVisibleCheckboxes.length,
+                        indeterminate: checkedVisibleCheckboxes.length > 0 && 
+                                      checkedVisibleCheckboxes.length < visibleCheckboxes.length
                     });
                 }
 
@@ -658,9 +680,17 @@
                  * 機能選択モーダルが開かれたときの処理
                  */
                 $('#functionSelectModal').on('shown.bs.modal', function() {
+                    // 検索フィールドをクリアしてフォーカス
                     $('#functionSearchInput').val('').focus();
+                    
+                    // すべての行を表示
+                    $('#availableFunctionTableBody tr').show();
+                    
                     // 追加ボタンを無効化
                     $('#addSelectedFunctionsBtn').prop('disabled', true);
+                    
+                    // 全選択チェックボックスの状態を更新
+                    updateSelectAllCheckboxState();
                 });
 
                 /**
@@ -671,6 +701,28 @@
                     $('#availableFunctionTableBody').empty();
                     // 追加ボタンを無効化
                     $('#addSelectedFunctionsBtn').prop('disabled', true);
+                });
+
+                /**
+                 * 機能検索フィルターの処理を修正
+                 */
+                $('#functionSearchInput').on('input', function() {  // keyupからinputに変更
+                    const searchText = $(this).val().toLowerCase();
+                    
+                    $('#availableFunctionTableBody tr').each(function() {
+                        const functionCode = $(this).find('td:eq(1)').text().toLowerCase();
+                        const functionName = $(this).find('td:eq(2)').text().toLowerCase();
+                        
+                        // 機能コードまたは機能名に検索テキストが含まれているか確認
+                        const isMatch = functionCode.includes(searchText) || 
+                                       functionName.includes(searchText);
+                        
+                        // 検索結果に応じて行の表示/非表示を切り替え
+                        $(this).toggle(isMatch);
+                    });
+                    
+                    // 全選択チェックボックスの状態を更新
+                    updateSelectAllCheckboxState();
                 });
 
                 /**
@@ -1027,6 +1079,44 @@
                     const month = String(date.getMonth() + 1).padStart(2, '0');
                     const day = String(date.getDate()).padStart(2, '0');
                     return `${year}-${month}-${day}`; // カレンダー用にハイフン区切りに変更
+                }
+
+                // チケット番号入力フィールドのイベントハンドラを追加
+                $('#ticketNumber').on('blur', function() {
+                    const ticketNumber = $(this).val().trim();
+                    if (ticketNumber) {
+                        fetchTicketFromRedmine(ticketNumber);
+                    }
+                });
+
+                // Redmineからチケット情報を取得する関数
+                function fetchTicketFromRedmine(ticketNumber) {
+                    $.get(`/api/redmine/issues/${ticketNumber}`)
+                        .done(function(response) {
+                            if (response && response.issue) {
+                                // チケット情報をフォームに設定
+                                $('#projectName').val(response.issue.subject);
+                                $('#description').val(response.issue.description);
+                                
+                                // プロジェクト名からサービス区分を推測して設定
+                                const projectName = response.issue.project.name.toLowerCase();
+                                $('#categoryId option').each(function() {
+                                    if ($(this).text().toLowerCase().includes(projectName)) {
+                                        $(this).prop('selected', true);
+                                        return false;  // ループを抜ける
+                                    }
+                                });
+                                
+                                toastr.success('Redmineからチケット情報を取得しました');
+                            }
+                        })
+                        .fail(function(xhr) {
+                            if (xhr.status === 404) {
+                                toastr.warning('指定されたチケットが見つかりません');
+                            } else {
+                                toastr.error('チケット情報の取得に失敗しました');
+                            }
+                        });
                 }
             });
         </script>

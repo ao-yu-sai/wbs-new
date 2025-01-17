@@ -49,8 +49,9 @@ pagehelper:
 
 # Redmine設定
 redmine:
-  url: https://benefit-one.net/extrdmn
-  api-key: e1b2766512ba4f2b8098df6ecd3bb60e6b0c32c9 
+  api:
+    url: https://benefit-one.net/extrdmn
+    key: e1b2766512ba4f2b8098df6ecd3bb60e6b0c32c9
 
 http:
   encoding:
@@ -65,3 +66,7 @@ logging:
     file: UTF-8
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" 
+  level:
+    root: INFO
+    com.ai_offshore.tools.wbs.web: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG 
